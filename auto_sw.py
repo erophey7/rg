@@ -131,12 +131,16 @@ def run():
     adapters = scan_adapters()
     print_adapters(adapters)
     select_bridge_adapters = input('Select adapters for brige(through space)> ').split(' ')
+    br_interface = input('Brige interface> ')
+    br_name = input('Brigde name> ')
     sw_ip = input('Switch IP (ip\subnet)> ')
     r_ip = input('Router IP (ip)> ')
-    br_name = input('Brigde name> ')
     VLANs = input('Network VLANs (through space)> ').split(' ')
-    br_interface = input('Brige interface> ')
     sw_vlan = input('Switch VLAN> ')
+    stp = input('Enable STP? (Y/n)> ')
+    if stp == 'Y' or stp == '' or stp == 'y' or stp == 'yes':
+        stp_prio = input('STP prio> ')
+    
 
     #set FQDN
     os.system(f'hostnamectl set-hostname {fqdn}')
@@ -160,10 +164,16 @@ def run():
     for i in select_bridge_adapters:
         os.system(f'ovs-vsctl add-port {br_name} {i} trunk={",".join(VLANs)}')
     os.system('systemctl restart network')
+    if stp == 'Y' or stp == '' or stp == 'y' or stp == 'yes':
+        os.system(f'ovs-vsctl set bridge {br_name} stp_enable=true')
+        os.system(f'ovs-vsctl set bridge {br_name} other_config:stp-priority={stp_prio}')
+    
+    #enable 8021q
     os.system('modprobe 8021q')
     os.system('echo "8021q" | tee -a /etc/modules')
+
     restart = input("Done, restart? (Y,n)> ")
-    if restart == 'Y' or restart == '':
+    if restart == 'Y' or restart == '' or restart == 'y' or restart == 'yes':
         os.system('reboot')
 
     
