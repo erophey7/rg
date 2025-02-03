@@ -32,9 +32,9 @@ EOF
 
 # Создание универсального юнит-файла для всех интерфейсов
 echo "Создание systemd юнита для всех интерфейсов..."
-cat << 'EOF' > /etc/systemd/system/dhcpcd-all.service
+cat << 'EOF' > /etc/systemd/system/dhcpcd.service
 [Unit]
-Description=DHCP Client Daemon for all interfaces
+Description=DHCP Client Daemon
 After=network.target
 Wants=network.target
 
@@ -61,9 +61,9 @@ systemctl daemon-reload
 udevadm control --reload-rules
 udevadm trigger
 
-# Включение dhcpcd-all для автозапуска при загрузке
+# Включение dhcpcd для автозапуска при загрузке
 echo "Активация dhcpcd для всех интерфейсов при загрузке..."
-systemctl enable dhcpcd-all.service
-systemctl start dhcpcd-all.service
+systemctl enable dhcpcd.service
+systemctl start dhcpcd.service
 
 echo "Установка и настройка завершены!"
