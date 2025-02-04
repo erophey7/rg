@@ -168,6 +168,7 @@ def setup_samba_master(config):
     os.system('''grep -q KRB5RCACHETYPE /etc/sysconfig/bind || echo 'KRB5RCACHETYPE="none"' >> /etc/sysconfig/bind''')
     print('Enable BIND_DLZ')
     os.system('control bind-chroot disabled')
+    os.system("""grep -q 'bind-dns' /etc/bind/named.conf || echo 'include "/var/lib/samba/bind-dns/named.conf";' >> /etc/bind/named.conf""")
 
     print('add settings to BIND')
     insert_into_file('/etc/bind/options.conf', ['        tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab";\n', '        minimal-responses yes;\n'], "options {", before=False)
