@@ -240,19 +240,19 @@ def dns_necessary(config):
     for i in necessary_A:
         name = i['hostname'].split('.')[0]
         domain = f"{i['hostname'].split('.')[1]}.{i['hostname'].split('.')[2]}"
-        print(maincmd.format(f'samba-tool dns add 127.0.0.1 {domain} {name} A {i["ip"]}'))
+        os.system(maincmd.format(f'samba-tool dns add 127.0.0.1 {domain} {name} A {i["ip"]}'))
 
     for i in necessary_ZONE:
-        print(maincmd.format(f'samba-tool dns zonecreate 127.0.0.1 {i}'))
+        os.system(maincmd.format(f'samba-tool dns zonecreate 127.0.0.1 {i}'))
 
     for i in necessary_PTR:
         reversed_ip = '.'.join(list(reversed(i['ip'].split('.')[:-1])))
         subnet8 = i['ip'].split('.')[3]
-        print(maincmd.format(f'samba-tool dns add 127.0.0.1 {reversed_ip}.in-addr.arpa {subnet8} PTR {i["hostname"]}'))
+        os.system(maincmd.format(f'samba-tool dns add 127.0.0.1 {reversed_ip}.in-addr.arpa {subnet8} PTR {i["hostname"]}'))
 
     for i in necessary_CNAME:
         domain = f"{i['target'].split('.')[1]}.{i['target'].split('.')[2]}"
-        print(maincmd.format(f"samba-tool dns add 127.0.0.1 {domain} {i['alias']} CNAME {i['target']}"))
+        os.system(maincmd.format(f"samba-tool dns add 127.0.0.1 {domain} {i['alias']} CNAME {i['target']}"))
 
 
 def setup_server_master():
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     if mode == 'master':
         setup_server_master()
 
-    elif mode == 'slave':
+    if mode == 'slave':
         try:
             admpass = sys.argv[2]
             slave_server_fqdn = sys.argv[3]
