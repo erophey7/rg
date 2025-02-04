@@ -263,7 +263,8 @@ def setup_samba_slave(admpass, slave_server_fqdn, master_server_fqdn):
     os.system(f'rm -rf /var/cache/samba')
     os.system(f'mkdir -p /var/lib/samba/sysvol')
     print('Enter to domain')
-    os.system(f'echo "{admpass}" | samba-tool domain join {f"{slave_server_fqdn.split('.')[1]}.{slave_server_fqdn.split('.')[2]}"} DC -U administrator --realm={f"{slave_server_fqdn.split('.')[1]}.{slave_server_fqdn.split('.')[2]}"} --dns-backend=BIND9_DLZ')
+    domain = slave_server_fqdn.split('.')[1].slave_server_fqdn.split('.')[2]
+    os.system(f'echo "{admpass}" | samba-tool domain join {f"{domain}"} DC -U administrator --realm={f"{domain}"} --dns-backend=BIND9_DLZ')
     print('Enable samba, bind')
     os.system('systemctl enable --now samba')
     os.system('systemctl enable --now bind')
