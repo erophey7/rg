@@ -164,6 +164,38 @@ def setup_samba_master(config):
     os.system('mkdir /opt/data')
     os.system('chmod 777 /opt/data')
 
+    samba_conf = """
+    [SAMBA]
+    path = /opt/data
+    comment = SAMBA
+    public = yes
+    writable = yes
+    browseable = yes
+    guest ok = yes
+    """
+    with open('/etc/samba/smb.conf', "a+") as file:
+        file.write(samba_conf)
+
+    print('Restart Samba')
+    os.system('systemctl restart samba')
+
+    print('Setup Users and Groups')
+    for i in range(1, 3):
+        os.system(f'samba-tool group add group{i}')
+    for i in range(1, 10):
+        os.system(f'samba-tool user add user{i} P@ssw0rd;')
+        os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
+        os.system(f'samba-tool group addmembers "group1" user{i};')
+    for i in range(11, 20):
+        os.system(f'samba-tool user add user{i} P@ssw0rd;')
+        os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
+        os.system(f'samba-tool group addmembers "group2" user{i};')
+    for i in range(21, 30):
+        os.system(f'samba-tool user add user{i} P@ssw0rd;')
+        os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
+        os.system(f'samba-tool group addmembers "group3" user{i};')
+    os.system("samba-tool ou add 'OU=CLI'")
+    os.system("samba-tool ou add 'OU=ADMIN'")
 
 
 def dns_necessary(config):
