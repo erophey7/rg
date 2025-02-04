@@ -3,6 +3,7 @@ import sys
 import fileinput
 import re
 import pexpect
+import time
 
 def parse_config(config_str):
     config = {
@@ -172,6 +173,7 @@ def setup_samba_master(config):
     os.system('rm -rf /var/lib/samba')
     os.system('rm -rf /var/cache/samba')
     os.system('mkdir -p /var/lib/samba/sysvol')
+    time.sleep(5)
 
     print('Start domain setup')
     domain_provision(config['admpass'])
@@ -181,14 +183,14 @@ def setup_samba_master(config):
     os.system('systemctl start bind')
 
     print('Setup Kerberos')
-    os.system('cp /var/lib/samba/private/krb5.conf /etc/krb5.conf')
+    os.system('cp -f /var/lib/samba/private/krb5.conf /etc/krb5.conf')
 
     print('Setup shared folder')
     os.system('mkdir /opt/data')
     os.system('chmod 777 /opt/data')
 
     samba_conf = """
-    [SAMBA]
+[SAMBA]
     path = /opt/data
     comment = SAMBA
     public = yes
