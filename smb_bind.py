@@ -1,9 +1,8 @@
-import subprocess
 import os
-import json
 import sys
 import fileinput
 import re
+import pexpect
 
 def parse_config(config_str):
     config = {
@@ -122,33 +121,35 @@ def replace_in_file(file_path, replacements):
             print(line, end='')
 
 def domain_provision(password):
-    # Запуск команды samba-tool domain provision
-    process = subprocess.Popen(
-        ['samba-tool', 'domain', 'provision'],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
+    try:
+        child = pexpect.spawn('samba-tool domain provision', encoding='utf-8', timeout=300)
 
-    # Автоматический ввод строк (эмулируется через stdin)
-    process.stdin.write('\n')  # Пропуск
-    process.stdin.write('\n')  # Пропуск
-    process.stdin.write('\n')  # Пропуск
-    process.stdin.write('BIND9_DLZ\n')  # Выбор BIND9_DLZ
-    process.stdin.write(f'{password}\n')  # Пароль
-    process.stdin.write(f'{password}\n')  # Повтор пароля
+        child.expect("Realm \[.*\]:")
+        child.sendline('')  # Пропускаем ввод (используется значение по умолчанию)
 
-    # Закрываем stdin, чтобы завершить ввод
-    process.stdin.close()
+        child.expect("Domain \[.*\]:")
+        child.sendline('')  # Пропускаем ввод
 
-    # Чтение вывода и ошибок
-    stdout, stderr = process.communicate()
+        child.expect("Server Role \[.*\]:")
+        child.sendline('')  # Пропускаем ввод
 
-    # Печать вывода для отладки
-    print(stdout)
-    if stderr:
-        print("Error:", stderr)
+        child.expect("DNS backend \[SAMBA_INTERNAL\]:")
+        child.sendline('BIND9_DLZ')  # Выбираем BIND9_DLZ
+
+        child.expect("Administrator password:")
+        child.sendline(password)  # Вводим пароль
+
+        child.expect("Retype password:")
+        child.sendline(password)  # Повтор пароля
+
+        # Ожидаем завершение установки
+        child.expect(pexpect.EOF)
+
+        # Вывод результата
+        print(child.before)
+
+    except Exception as e:
+        print("Ошибка:", str(e))
 
 def setup_samba_master(config):
     print('Installing Samba')
