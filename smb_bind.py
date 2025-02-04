@@ -76,7 +76,26 @@ def read_config():
             file.write(example)
 
 def verity_config(config):
-    print(config)
+    cfg_info = {'state': True, 'message': "не заполнено: "}
+
+    if config['admpass'] == "":
+        cfg_info['message'] += "ADMPASS, "
+        cfg_info['state'] = False
+    if config['dns']['A'] == []:
+        cfg_info['message'] += "A, "
+        cfg_info['state'] = False
+    if config['dns']['ZONE'] == []:
+        cfg_info['message'] += "ZONE, "
+        cfg_info['state'] = False
+    if config['dns']['PTR'] == []:
+        cfg_info['message'] += "PTR, "
+        cfg_info['state'] = False
+    if config['dns']['CNAME'] == []:
+        cfg_info['message'] += "CNAME"
+        cfg_info['state'] = False
+
+    return cfg_info
+
 
 def insert_into_file(file_path, insert_lines, marker, before=True):
     with open(file_path, 'r') as file:
@@ -228,10 +247,12 @@ def dns_necessary(config):
 
 def setup_server_master():
     config = read_config()
-    if verity_config(config):
-        print('exit')
-        #setup_samba_master(config)
-        #dns_necessary(config)
+    if verity_config(config)['state'] == True:
+        setup_samba_master(config)
+        dns_necessary(config)
+    else:
+        print(verity_config(config)['message'])
+        exit(0)
     
 
 def setup_samba_slave(admpass, slave_server_fqdn, master_server_fqdn):
