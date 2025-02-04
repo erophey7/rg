@@ -75,6 +75,9 @@ def read_config():
                        "# CNAME: zabbix srv1-dt.au.team  # zabbix.ua.team будет перенаправляться на srv1-dt.au.team\n")
             file.write(example)
 
+def verity_config(config):
+    print(config)
+
 def insert_into_file(file_path, insert_lines, marker, before=True):
     with open(file_path, 'r') as file:
         lines = file.readlines()
@@ -193,8 +196,11 @@ def dns_necessary(config):
 
 def setup_server_master():
     config = read_config()
-    setup_samba_master(config)
-    dns_necessary(config)
+    if verity_config(config):
+        print('exit')
+        #setup_samba_master(config)
+        #dns_necessary(config)
+    
 
 def setup_samba_slave(admpass, slave_server_fqdn, master_server_fqdn):
     print('Installing Samba')
