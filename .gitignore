@@ -1,1 +1,2 @@
-smb_bind.conf
+*.conf
+test.py

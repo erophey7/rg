@@ -167,6 +167,38 @@ def setup_samba_master(config):
     os.system('mkdir /opt/data')
     os.system('chmod 777 /opt/data')
 
+    samba_conf = """
+    [SAMBA]
+    path = /opt/data
+    comment = SAMBA
+    public = yes
+    writable = yes
+    browseable = yes
+    guest ok = yes
+    """
+    with open('/etc/samba/smb.conf', "a+") as file:
+        file.write(samba_conf)
+
+    print('Restart Samba')
+    os.system('systemctl restart samba')
+
+    print('Setup Users and Groups')
+    for i in range(1, 3):
+        os.system(f'samba-tool group add group{i}')
+    for i in range(1, 10):
+        os.system(f'samba-tool user add user{i} P@ssw0rd;')
+        os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
+        os.system(f'samba-tool group addmembers "group1" user{i};')
+    for i in range(11, 20):
+        os.system(f'samba-tool user add user{i} P@ssw0rd;')
+        os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
+        os.system(f'samba-tool group addmembers "group2" user{i};')
+    for i in range(21, 30):
+        os.system(f'samba-tool user add user{i} P@ssw0rd;')
+        os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
+        os.system(f'samba-tool group addmembers "group3" user{i};')
+    os.system("samba-tool ou add 'OU=CLI'")
+    os.system("samba-tool ou add 'OU=ADMIN'")
 
 
 def dns_necessary(config):
@@ -237,7 +269,8 @@ def setup_samba_slave(admpass, slave_server_fqdn, master_server_fqdn):
     os.system(f'rm -rf /var/cache/samba')
     os.system(f'mkdir -p /var/lib/samba/sysvol')
     print('Enter to domain')
-    os.system(f'echo "{admpass}" | samba-tool domain join {f"{slave_server_fqdn.split('.')[1]}.{slave_server_fqdn.split('.')[2]}"} DC -U administrator --realm={f"{slave_server_fqdn.split('.')[1]}.{slave_server_fqdn.split('.')[2]}"} --dns-backend=BIND9_DLZ')
+    domain = slave_server_fqdn.split('.')[1].slave_server_fqdn.split('.')[2]
+    os.system(f'echo "{admpass}" | samba-tool domain join {f"{domain}"} DC -U administrator --realm={f"{domain}"} --dns-backend=BIND9_DLZ')
     print('Enable samba, bind')
     os.system('systemctl enable --now samba')
     os.system('systemctl enable --now bind')
