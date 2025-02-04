@@ -212,17 +212,17 @@ def setup_samba_master(config):
     os.system('systemctl restart samba')
 
     print('Setup Users and Groups')
-    for i in range(1, 3):
+    for i in range(1, 4):
         os.system(f'samba-tool group add group{i}')
-    for i in range(1, 10):
+    for i in range(1, 11):
         os.system(f'samba-tool user add user{i} P@ssw0rd;')
         os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
         os.system(f'samba-tool group addmembers "group1" user{i};')
-    for i in range(11, 20):
+    for i in range(11, 21):
         os.system(f'samba-tool user add user{i} P@ssw0rd;')
         os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
         os.system(f'samba-tool group addmembers "group2" user{i};')
-    for i in range(21, 30):
+    for i in range(21, 31):
         os.system(f'samba-tool user add user{i} P@ssw0rd;')
         os.system(f'samba-tool user setexpiry user{i} --noexpiry;')
         os.system(f'samba-tool group addmembers "group3" user{i};')
@@ -300,18 +300,22 @@ def setup_samba_slave(admpass, slave_server_fqdn, master_server_fqdn):
     os.system(f'rm -rf /var/cache/samba')
     os.system(f'mkdir -p /var/lib/samba/sysvol')
     print('Enter to domain')
-    domain = slave_server_fqdn.split('.')[1].slave_server_fqdn.split('.')[2]
-    os.system(f'echo "{admpass}" | samba-tool domain join {f"{domain}"} DC -U administrator --realm={f"{domain}"} --dns-backend=BIND9_DLZ')
+
+    # Исправленный код: получаем домен из FQDN
+    parts = slave_server_fqdn.split('.')
+    if len(parts) >= 3:
+        domain = '.'.join(parts[1:])  # Берём второй и третий элемент, и соединяем их
+    else:
+        raise ValueError(f"FQDN '{slave_server_fqdn}' некорректен, должно быть минимум три части")
+
+    os.system(f'echo "{admpass}" | samba-tool domain join {domain} DC -U administrator --realm={domain} --dns-backend=BIND9_DLZ')
     print('Enable samba, bind')
     os.system('systemctl enable --now samba')
     os.system('systemctl enable --now bind')
     print('Replicate domain controlers')
-    os.system(f'echo "{admpass}" |samba-tool drs replicate {slave_server_fqdn} {master_server_fqdn} dc=au,dc=team -U administrator')
+    os.system(f'echo "{admpass}" | samba-tool drs replicate {slave_server_fqdn} {master_server_fqdn} dc=au,dc=team -U administrator')
     os.system(f'echo "{admpass}" | samba-tool drs replicate {master_server_fqdn} {slave_server_fqdn} dc=au,dc=team -U administrator')
 
-
-def setup_server_slave(admpass):
-    setup_samba_slave(admpass)
 
 if __name__ == "__main__":
     try:
@@ -331,7 +335,7 @@ if __name__ == "__main__":
         except IndexError:
             print(f'Usage: python3 {sys.argv[0]} <mode (master/slave)> <admin pass (if slave)> <slave server fqdn> <master server fqdn>')
             exit(0)
-        setup_server_slave(admpass, slave_server_fqdn, master_server_fqdn)
+        setup_samba_slave(admpass, slave_server_fqdn, master_server_fqdn)
 
     else:
         print(f'Usage: python3 {sys.argv[0]} <mode (master/slave)> <admin pass (if slave)> <slave server fqdn> <master server fqdn>')
