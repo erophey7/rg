@@ -125,29 +125,36 @@ def domain_provision(password):
     try:
         child = pexpect.spawn('samba-tool domain provision', encoding='utf-8', timeout=300)
 
-        child.expect("Realm \[.*\]:")
-        child.sendline('')  # Пропускаем ввод (используется значение по умолчанию)
+        # Выводим stdout в реальном времени
+        child.logfile_read = sys.stdout  
 
-        child.expect("Domain \[.*\]:")
-        child.sendline('')  # Пропускаем ввод
+        # Ожидание и ввод данных
+        child.expect_exact("Realm [AU.TEAM]:")  
+        child.sendline('')
+        child.flush()  # Принудительно отправляем буфер
 
-        child.expect("Server Role \[.*\]:")
-        child.sendline('')  # Пропускаем ввод
+        child.expect_exact("Domain [AU]:")  
+        child.sendline('')
+        child.flush()
 
-        child.expect("DNS backend \[SAMBA_INTERNAL\]:")
-        child.sendline('BIND9_DLZ')  # Выбираем BIND9_DLZ
+        child.expect_exact("Server Role (dc, member, standalone) [dc]:")  
+        child.sendline('')
+        child.flush()
 
-        child.expect("Administrator password:")
-        child.sendline(password)  # Вводим пароль
+        child.expect_exact("DNS backend (SAMBA_INTERNAL, BIND9_FLATFILE, BIND9_DLZ, NONE) [SAMBA_INTERNAL]:")  
+        child.sendline('BIND9_DLZ')
+        child.flush()
 
-        child.expect("Retype password:")
-        child.sendline(password)  # Повтор пароля
+        child.expect_exact("Administrator password:")  
+        child.sendline(password)
+        child.flush()
 
-        # Ожидаем завершение установки
+        child.expect_exact("Retype password:")  
+        child.sendline(password)
+        child.flush()
+
+        # Ждём завершения
         child.expect(pexpect.EOF)
-
-        # Вывод результата
-        print(child.before)
 
     except Exception as e:
         print("Ошибка:", str(e))
